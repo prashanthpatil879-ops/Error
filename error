@@ -1,0 +1,271 @@
+[2026-09-30 15:44:35] - INFO - HAIneffectiveness - Today's date key is 20260511
+[2026-09-30 15:44:35] - INFO - UnityCatalog - Reading data from 
+            SELECT a.*, b.FORECAST_DATE_KEY, b.FORECAST_DATE, b.FORECAST_SEQ FROM 
+            ( select * from gfdo_dev_catalog.gft_rda_semantic.irr_mapping_dim_date where INGESTION_TS = ( SELECT MAX(INGESTION_TS) FROM gfdo_dev_catalog.gft_rda_semantic.irr_mapping_dim_date) AND DATE_KEY = 20260511 ) a
+            join 
+            ( select * from gfdo_dev_catalog.gft_rda_semantic.irr_mapping_dim_forecast_date where INGESTION_TS = ( SELECT MAX(INGESTION_TS) FROM gfdo_dev_catalog.gft_rda_semantic.irr_mapping_dim_forecast_date) AND FORECAST_DATE = (
+            select max(FORECAST_DATE) from gfdo_dev_catalog.gft_rda_semantic.irr_mapping_dim_forecast_date where FORECAST_DATE_KEY <= 20260511
+            ) 
+            ) b
+        
+[2026-09-30 15:44:37] - INFO - HAIneffectiveness - Reading inputs for HA Ineffectiveness process, Quarter End Date: 2026-03-31
+[2026-09-30 15:44:37] - INFO - UnityCatalog - Reading latest data from gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_fi_raw
+[2026-09-30 15:44:37] - INFO - UnityCatalog - Reading max watermark value from gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_fi_raw
+[2026-09-30 15:44:37] - INFO - UnityCatalog - Reading data from SELECT MAX(INGESTION_TS) as WATERMARK FROM gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_fi_raw WHERE INCEPTION_DATE='2026-04-01'
+[2026-09-30 15:44:37] - INFO - UnityCatalog - Reading data from SELECT * FROM gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_fi_raw WHERE INGESTION_TS = CAST('2026-08-26 11:17:50.732638' AS TIMESTAMP) AND INCEPTION_DATE='2026-04-01'
+[2026-09-30 15:44:37] - INFO - UnityCatalog - Reading latest data from gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_derivatives_raw
+[2026-09-30 15:44:37] - INFO - UnityCatalog - Reading max watermark value from gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_derivatives_raw
+[2026-09-30 15:44:37] - INFO - UnityCatalog - Reading data from SELECT MAX(INGESTION_TS) as WATERMARK FROM gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_derivatives_raw WHERE INCEPTION_DATE='2026-04-01'
+[2026-09-30 15:44:38] - INFO - UnityCatalog - Reading data from SELECT * FROM gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_derivatives_raw WHERE INGESTION_TS = CAST('2026-08-26 11:12:11.358332' AS TIMESTAMP) AND INCEPTION_DATE='2026-04-01'
+[2026-09-30 15:44:38] - INFO - UnityCatalog - Reading latest data from gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_liab_post_hp_raw
+[2026-09-30 15:44:38] - INFO - UnityCatalog - Reading max watermark value from gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_liab_post_hp_raw
+[2026-09-30 15:44:38] - INFO - UnityCatalog - Reading data from SELECT MAX(INGESTION_TS) as WATERMARK FROM gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_liab_post_hp_raw WHERE INCEPTION_DATE='2026-04-01'
+[2026-09-30 15:44:39] - INFO - UnityCatalog - Reading data from SELECT * FROM gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_liab_post_hp_raw WHERE INGESTION_TS = CAST('2026-08-26 11:21:38.526209' AS TIMESTAMP) AND INCEPTION_DATE='2026-04-01'
+[2026-09-30 15:44:39] - INFO - UnityCatalog - Reading latest data from gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_mapping_nt_llp_raw
+[2026-09-30 15:44:39] - INFO - UnityCatalog - Reading max watermark value from gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_mapping_nt_llp_raw
+[2026-09-30 15:44:39] - INFO - UnityCatalog - Reading data from SELECT MAX(INGESTION_TS) as WATERMARK FROM gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_mapping_nt_llp_raw 
+[2026-09-30 15:44:39] - INFO - UnityCatalog - Reading data from SELECT * FROM gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_dv01_mapping_nt_llp_raw WHERE INGESTION_TS = CAST('2026-09-10 11:25:57.419735' AS TIMESTAMP)
+[2026-09-30 15:44:40] - INFO - UnityCatalog - Reading latest data from gfdo_dev_catalog.gft_rda_curation.irr_ec_forecasting_ifs_fx_rates
+[2026-09-30 15:44:40] - INFO - UnityCatalog - Reading max watermark value from gfdo_dev_catalog.gft_rda_curation.irr_ec_forecasting_ifs_fx_rates
+[2026-09-30 15:44:40] - INFO - UnityCatalog - Reading data from SELECT MAX(INGESTION_TS) as WATERMARK FROM gfdo_dev_catalog.gft_rda_curation.irr_ec_forecasting_ifs_fx_rates WHERE DATE = '2026-03-31'
+[2026-09-30 15:44:40] - INFO - UnityCatalog - Reading data from SELECT * FROM gfdo_dev_catalog.gft_rda_curation.irr_ec_forecasting_ifs_fx_rates WHERE INGESTION_TS = CAST('2026-09-03 15:55:03.852587' AS TIMESTAMP) AND DATE = '2026-03-31'
+[2026-09-30 15:44:40] - INFO - UnityCatalog - Reading latest data from gfdo_dev_catalog.gft_rda_semantic.irr_mapping_heirarchy_mapping_latest
+[2026-09-30 15:44:40] - INFO - UnityCatalog - Reading max watermark value from gfdo_dev_catalog.gft_rda_semantic.irr_mapping_heirarchy_mapping_latest
+[2026-09-30 15:44:40] - INFO - UnityCatalog - Reading data from SELECT MAX(INGESTION_TS) as WATERMARK FROM gfdo_dev_catalog.gft_rda_semantic.irr_mapping_heirarchy_mapping_latest 
+[2026-09-30 15:44:41] - INFO - UnityCatalog - Reading data from SELECT * FROM gfdo_dev_catalog.gft_rda_semantic.irr_mapping_heirarchy_mapping_latest WHERE INGESTION_TS = CAST('2026-08-12 08:54:04.955511' AS TIMESTAMP)
+[2026-09-30 15:44:41] - INFO - UnityCatalog - Reading latest data from gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_rf_ear_shocks_raw
+[2026-09-30 15:44:41] - INFO - UnityCatalog - Reading max watermark value from gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_rf_ear_shocks_raw
+[2026-09-30 15:44:41] - INFO - UnityCatalog - Reading data from SELECT MAX(INGESTION_TS) as WATERMARK FROM gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_rf_ear_shocks_raw WHERE EFFECTIVE_DATE='2026-03-31'
+[2026-09-30 15:44:42] - INFO - UnityCatalog - Reading data from SELECT * FROM gfdo_dev_catalog.gft_rda_raw.irr_ear_reporting_rf_ear_shocks_raw WHERE INGESTION_TS = CAST('2026-08-28 09:31:08.666537' AS TIMESTAMP) AND EFFECTIVE_DATE='2026-03-31'
+[2026-09-30 15:44:42] - INFO - UnityCatalog - Reading latest data from gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_csm_flooring_avg_shocks
+[2026-09-30 15:44:42] - INFO - UnityCatalog - Reading max watermark value from gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_csm_flooring_avg_shocks
+[2026-09-30 15:44:42] - INFO - UnityCatalog - Reading data from SELECT MAX(INGESTION_TS) as WATERMARK FROM gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_csm_flooring_avg_shocks WHERE REPORTING_DATE='2026-03-31'
+[2026-09-30 15:44:43] - INFO - UnityCatalog - Reading data from SELECT * FROM gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_csm_flooring_avg_shocks WHERE INGESTION_TS = CAST('2026-09-14 21:38:53.444812' AS TIMESTAMP) AND REPORTING_DATE='2026-03-31'
+[2026-09-30 15:44:43] - INFO - UnityCatalog - Reading latest data from gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma
+[2026-09-30 15:44:43] - INFO - UnityCatalog - Reading max watermark value from gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma
+[2026-09-30 15:44:43] - INFO - UnityCatalog - Reading data from SELECT MAX(INGESTION_TS) as WATERMARK FROM gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma WHERE REPORTING_DATE='2026-03-31'
+[2026-09-30 15:44:43] - INFO - UnityCatalog - Reading data from SELECT * FROM gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma WHERE INGESTION_TS = CAST('2026-09-18 00:41:08.151901' AS TIMESTAMP) AND REPORTING_DATE='2026-03-31'
+[2026-09-30 15:44:44] - INFO - HAIneffectiveness - Starting HA Ineffectiveness - Partial DV01 calculation process...
+[2026-09-30 15:44:44] - INFO - HAIneffectiveness - Caching dataframe total_dv01_df for HAIneffectiveness...
+[2026-09-30 15:44:47] - INFO - HAIneffectiveness - Caching dataframe partial_dv01_df for HAIneffectiveness...
+[2026-09-30 15:44:47] - INFO - HAIneffectiveness - HA Ineffectiveness - Partial DV01 calculation completed
+[2026-09-30 15:44:47] - INFO - HAIneffectiveness - Starting HA Ineffectiveness - Losses calculation process...
+[2026-09-30 15:44:49] - WARNING - HAIneffectiveness - No shock for ['CHF'] - using USD shocks for them.Their DV01 is still converted at their own FX rate.
+{"ts": "2026-09-30 15:44:55.139", "level": "ERROR", "logger": "DataFrameQueryContextLogger", "msg": "[UNRESOLVED_COLUMN.WITH_SUGGESTION] A column, variable, or function parameter with name `CURRENCY_CODE` cannot be resolved. Did you mean one of the following? [`RUN_DATE`, `IR_GAMMA`, `INGESTION_TS`, `NET_+50BPS`, `NET_-50BPS`]. SQLSTATE: 42703;\n'Project [trim(GTD_TAM_SEGMENT#25128, None) AS GAMMA_LLP#25141, 'upper('trim('CURRENCY_CODE)) AS GAMMA_CURRENCY#25142, cast(IR_GAMMA#25137 as double) AS IR_GAMMA#25143]\n+- Project [GTD_TAM_SEGMENT#25157 AS GTD_TAM_SEGMENT#25128, DERIVATIVE_+50BPS#25158 AS DERIVATIVE_+50BPS#25129, DERIVATIVE_-50BPS#25159 AS DERIVATIVE_-50BPS#25130, LOCALBOND_+50BPS#25160 AS LOCALBOND_+50BPS#25131, LOCALBOND_-50BPS#25161 AS LOCALBOND_-50BPS#25132, LIABILITY_+50BPS#25162 AS LIABILITY_+50BPS#25133, LIABILITY_-50BPS#25163 AS LIABILITY_-50BPS#25134, NET_+50BPS#25164 AS NET_+50BPS#25135, NET_-50BPS#25165 AS NET_-50BPS#25136, IR_GAMMA#25166 AS IR_GAMMA#25137, INGESTION_TS#25167 AS INGESTION_TS#25138, REPORTING_DATE#25168 AS REPORTING_DATE#25139, RUN_DATE#25169 AS RUN_DATE#25140]\n   +- Project [GTD_TAM_SEGMENT#25157, DERIVATIVE_+50BPS#25158, DERIVATIVE_-50BPS#25159, LOCALBOND_+50BPS#25160, LOCALBOND_-50BPS#25161, LIABILITY_+50BPS#25162, LIABILITY_-50BPS#25163, NET_+50BPS#25164, NET_-50BPS#25165, IR_GAMMA#25166, INGESTION_TS#25167, REPORTING_DATE#25168, RUN_DATE#25169]\n      +- Filter ((INGESTION_TS#25167 = cast(2026-09-18 00:41:08.151901 as timestamp)) AND (REPORTING_DATE#25168 = cast(2026-03-31 as date)))\n         +- SubqueryAlias gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma\n            +- Relation gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma[GTD_TAM_SEGMENT#25157,DERIVATIVE_+50BPS#25158,DERIVATIVE_-50BPS#25159,LOCALBOND_+50BPS#25160,LOCALBOND_-50BPS#25161,LIABILITY_+50BPS#25162,LIABILITY_-50BPS#25163,NET_+50BPS#25164,NET_-50BPS#25165,IR_GAMMA#25166,INGESTION_TS#25167,REPORTING_DATE#25168,RUN_DATE#25169] parquet\n\n\nJVM stacktrace:\norg.apache.spark.sql.catalyst.ExtendedAnalysisException\n\tat org.apache.spark.sql.errors.QueryCompilationErrors$.unresolvedAttributeError(QueryCompilationErrors.scala:552)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.org$apache$spark$sql$catalyst$analysis$CheckAnalysis$$failUnresolvedAttribute(CheckAnalysis.scala:179)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$10(CheckAnalysis.scala:489)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$10$adapted(CheckAnalysis.scala:474)\n\tat org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:342)\n\tat org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1(TreeNode.scala:341)\n\tat org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1$adapted(TreeNode.scala:341)\n\tat scala.collection.mutable.ResizableArray.foreach(ResizableArray.scala:62)\n\tat scala.collection.mutable.ResizableArray.foreach$(ResizableArray.scala:55)\n\tat scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:49)\n\tat org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:341)\n\tat org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1(TreeNode.scala:341)\n\tat org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1$adapted(TreeNode.scala:341)\n\tat scala.collection.mutable.ResizableArray.foreach(ResizableArray.scala:62)\n\tat scala.collection.mutable.ResizableArray.foreach$(ResizableArray.scala:55)\n\tat scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:49)\n\tat org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:341)\n\tat org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1(TreeNode.scala:341)\n\tat org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1$adapted(TreeNode.scala:341)\n\tat scala.collection.Iterator.foreach(Iterator.scala:943)\n\tat scala.collection.Iterator.foreach$(Iterator.scala:943)\n\tat scala.collection.AbstractIterator.foreach(Iterator.scala:1431)\n\tat scala.collection.IterableLike.foreach(IterableLike.scala:74)\n\tat scala.collection.IterableLike.foreach$(IterableLike.scala:73)\n\tat scala.collection.AbstractIterable.foreach(Iterable.scala:56)\n\tat org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:341)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$9(CheckAnalysis.scala:474)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$9$adapted(CheckAnalysis.scala:474)\n\tat scala.collection.IndexedSeqOptimized.foreach(IndexedSeqOptimized.scala:36)\n\tat scala.collection.IndexedSeqOptimized.foreach$(IndexedSeqOptimized.scala:33)\n\tat scala.collection.mutable.WrappedArray.foreach(WrappedArray.scala:38)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$2(CheckAnalysis.scala:474)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$2$adapted(CheckAnalysis.scala:307)\n\tat org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:342)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis0(CheckAnalysis.scala:307)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis0$(CheckAnalysis.scala:278)\n\tat org.apache.spark.sql.catalyst.analysis.Analyzer.checkAnalysis0(Analyzer.scala:453)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis$1(CheckAnalysis.scala:263)\n\tat scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)\n\tat com.databricks.spark.util.FrameProfiler$.record(FrameProfiler.scala:94)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis(CheckAnalysis.scala:250)\n\tat org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis$(CheckAnalysis.scala:250)\n\tat org.apache.spark.sql.catalyst.analysis.Analyzer.checkAnalysis(Analyzer.scala:453)\n\tat org.apache.spark.sql.catalyst.analysis.resolver.HybridAnalyzer.$anonfun$resolveInFixedPoint$1(HybridAnalyzer.scala:254)\n\tat scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)\n\tat org.apache.spark.sql.catalyst.QueryPlanningTracker$.withTracker(QueryPlanningTracker.scala:233)\n\tat org.apache.spark.sql.catalyst.analysis.resolver.HybridAnalyzer.resolveInFixedPoint(HybridAnalyzer.scala:254)\n\tat org.apache.spark.sql.catalyst.analysis.resolver.HybridAnalyzer.$anonfun$apply$1(HybridAnalyzer.scala:96)\n\tat org.apache.spark.sql.catalyst.analysis.resolver.HybridAnalyzer.withTrackedAnalyzerBridgeState(HybridAnalyzer.scala:131)\n\tat org.apache.spark.sql.catalyst.analysis.resolver.HybridAnalyzer.apply(HybridAnalyzer.scala:87)\n\tat org.apache.spark.sql.catalyst.analysis.Analyzer.$anonfun$executeAndCheck$1(Analyzer.scala:514)\n\tat org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.markInAnalyzer(AnalysisHelper.scala:425)\n\tat org.apache.spark.sql.catalyst.analysis.Analyzer.executeAndCheck(Analyzer.scala:514)\n\tat org.apache.spark.sql.execution.QueryExecution.$anonfun$lazyAnalyzed$3(QueryExecution.scala:486)\n\tat com.databricks.spark.util.FrameProfiler$.record(FrameProfiler.scala:94)\n\tat org.apache.spark.sql.catalyst.QueryPlanningTracker.measurePhase(QueryPlanningTracker.scala:591)\n\tat org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$6(QueryExecution.scala:873)\n\tat org.apache.spark.sql.execution.SQLExecution$.withExecutionPhase(SQLExecution.scala:160)\n\tat org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$5(QueryExecution.scala:873)\n\tat org.apache.spark.sql.execution.QueryExecution$.withInternalError(QueryExecution.scala:1512)\n\tat org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$2(QueryExecution.scala:866)\n\tat com.databricks.util.LexicalThreadLocal$Handle.runWith(LexicalThreadLocal.scala:63)\n\tat org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$1(QueryExecution.scala:862)\n\tat org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:1512)\n\tat org.apache.spark.sql.execution.QueryExecution.executePhase(QueryExecution.scala:862)\n\tat org.apache.spark.sql.execution.QueryExecution.$anonfun$lazyAnalyzed$2(QueryExecution.scala:472)\n\tat com.databricks.sql.util.MemoryTrackerHelper.withMemoryTracking(MemoryTrackerHelper.scala:80)\n\tat org.apache.spark.sql.execution.QueryExecution.$anonfun$lazyAnalyzed$1(QueryExecution.scala:471)\n\tat scala.util.Try$.apply(Try.scala:213)\n\tat org.apache.spark.util.Utils$.doTryWithCallerStacktrace(Utils.scala:1775)\n\tat org.apache.spark.util.Utils$.getTryWithCallerStacktrace(Utils.scala:1836)\n\tat org.apache.spark.util.LazyTry.get(LazyTry.scala:58)\n\tat org.apache.spark.sql.execution.QueryExecution.analyzed(QueryExecution.scala:526)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformDeduplicate(SparkConnectPlanner.scala:1656)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:199)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)\n\tat org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)\n\tat scala.Option.getOrElse(Option.scala:189)\n\tat org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformSubqueryAlias(SparkConnectPlanner.scala:402)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:213)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)\n\tat org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)\n\tat scala.Option.getOrElse(Option.scala:189)\n\tat org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformJoin(SparkConnectPlanner.scala:3044)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformJoinOrJoinWith(SparkConnectPlanner.scala:3023)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:197)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)\n\tat org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)\n\tat scala.Option.getOrElse(Option.scala:189)\n\tat org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformProject(SparkConnectPlanner.scala:1957)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:192)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)\n\tat org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)\n\tat scala.Option.getOrElse(Option.scala:189)\n\tat org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformFilter(SparkConnectPlanner.scala:1903)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:193)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)\n\tat org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)\n\tat scala.Option.getOrElse(Option.scala:189)\n\tat org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformProject(SparkConnectPlanner.scala:1957)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:192)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)\n\tat org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)\n\tat scala.Option.getOrElse(Option.scala:189)\n\tat org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformDeduplicate(SparkConnectPlanner.scala:1654)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:199)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)\n\tat org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)\n\tat scala.Option.getOrElse(Option.scala:189)\n\tat org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)\n\tat org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)\n\tat org.apache.spark.sql.connect.execution.SparkConnectPlanExecution.handlePlan(SparkConnectPlanExecution.scala:91)\n\tat org.apache.spark.sql.connect.execution.ExecuteThreadRunner.handlePlan(ExecuteThreadRunner.scala:417)\n\tat org.apache.spark.sql.connect.execution.ExecuteThreadRunner.$anonfun$executeInternal$1(ExecuteThreadRunner.scala:326)\n\tat org.apache.spark.sql.connect.execution.ExecuteThreadRunner.$anonfun$executeInternal$1$adapted(ExecuteThreadRunner.scala:238)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$withSession$2(SessionHolder.scala:464)\n\tat org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:1512)\n\tat org.apache.spark.sql.connect.service.SessionHolder.$anonfun$withSession$1(SessionHolder.scala:464)\n\tat org.apache.spark.JobArtifactSet$.withActiveJobArtifactState(JobArtifactSet.scala:97)\n\tat org.apache.spark.sql.artifact.ArtifactManager.$anonfun$withResources$1(ArtifactManager.scala:90)\n\tat org.apache.spark.util.Utils$.withContextClassLoader(Utils.scala:251)\n\tat org.apache.spark.sql.artifact.ArtifactManager.withResources(ArtifactManager.scala:89)\n\tat org.apache.spark.sql.connect.service.SessionHolder.withSession(SessionHolder.scala:463)\n\tat org.apache.spark.sql.connect.execution.ExecuteThreadRunner.executeInternal(ExecuteThreadRunner.scala:238)\n\tat org.apache.spark.sql.connect.execution.ExecuteThreadRunner.org$apache$spark$sql$connect$execution$ExecuteThreadRunner$$execute(ExecuteThreadRunner.scala:144)\n\tat org.apache.spark.sql.connect.execution.ExecuteThreadRunner$ExecutionThread.$anonfun$run$2(ExecuteThreadRunner.scala:627)\n\tat scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)\n\tat com.databricks.unity.UCSEphemeralState$Handle.runWith(UCSEphemeralState.scala:51)\n\tat com.databricks.unity.HandleImpl.runWith(UCSHandle.scala:104)\n\tat com.databricks.unity.HandleImpl.$anonfun$runWithAndClose$1(UCSHandle.scala:109)\n\tat scala.util.Using$.resource(Using.scala:269)\n\tat com.databricks.unity.HandleImpl.runWithAndClose(UCSHandle.scala:108)\n\tat org.apache.
+
+... [*** WARNING: max output size exceeded, skipping output. ***] ...
+
+DERIVATIVE_+50BPS#25158 AS DERIVATIVE_+50BPS#25129, DERIVATIVE_-50BPS#25159 AS DERIVATIVE_-50BPS#25130, LOCALBOND_+50BPS#25160 AS LOCALBOND_+50BPS#25131, LOCALBOND_-50BPS#25161 AS LOCALBOND_-50BPS#25132, LIABILITY_+50BPS#25162 AS LIABILITY_+50BPS#25133, LIABILITY_-50BPS#25163 AS LIABILITY_-50BPS#25134, NET_+50BPS#25164 AS NET_+50BPS#25135, NET_-50BPS#25165 AS NET_-50BPS#25136, IR_GAMMA#25166 AS IR_GAMMA#25137, INGESTION_TS#25167 AS INGESTION_TS#25138, REPORTING_DATE#25168 AS REPORTING_DATE#25139, RUN_DATE#25169 AS RUN_DATE#25140]\\n   +- Project [GTD_TAM_SEGMENT#25157, DERIVATIVE_+50BPS#25158, DERIVATIVE_-50BPS#25159, LOCALBOND_+50BPS#25160, LOCALBOND_-50BPS#25161, LIABILITY_+50BPS#25162, LIABILITY_-50BPS#25163, NET_+50BPS#25164, NET_-50BPS#25165, IR_GAMMA#25166, INGESTION_TS#25167, REPORTING_DATE#25168, RUN_DATE#25169]\\n      +- Filter ((INGESTION_TS#25167 = cast(2026-09-18 00:41:08.151901 as timestamp)) AND (REPORTING_DATE#25168 = cast(2026-03-31 as date)))\\n         +- SubqueryAlias gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma\\n            +- Relation gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma[GTD_TAM_SEGMENT#25157,DERIVATIVE_+50BPS#25158,DERIVATIVE_-50BPS#25159,LOCALBOND_+50BPS#25160,LOCALBOND_-50BPS#25161,LIABILITY_+50BPS#25162,LIABILITY_-50BPS#25163,NET_+50BPS#25164,NET_-50BPS#25165,IR_GAMMA#25166,INGESTION_TS#25167,REPORTING_DATE#25168,RUN_DATE#25169] parquet\\n\", grpc_status:13, created_time:\"2026-09-30T15:44:55.112242054+00:00\"}\"\n>", "stacktrace": [{"class": null, "method": "_execute_and_fetch_as_iterator", "file": "/databricks/spark/python/pyspark/sql/connect/client/core.py", "line": "1941"}, {"class": null, "method": "__next__", "file": "<frozen _collections_abc>", "line": "356"}, {"class": null, "method": "send", "file": "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", "line": "150"}, {"class": null, "method": "_has_next", "file": "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", "line": "219"}, {"class": null, "method": "_has_next", "file": "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", "line": "191"}, {"class": null, "method": "_call_iter", "file": "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", "line": "346"}, {"class": null, "method": "_call_iter", "file": "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", "line": "301"}, {"class": null, "method": "<lambda>", "file": "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", "line": "192"}, {"class": null, "method": "__iter__", "file": "/databricks/spark/python/pyspark/sql/connect/client/core.py", "line": "661"}, {"class": null, "method": "__next__", "file": "/databricks/python/lib/python3.12/site-packages/grpc/_channel.py", "line": "540"}, {"class": null, "method": "_next", "file": "/databricks/python/lib/python3.12/site-packages/grpc/_channel.py", "line": "966"}]}}
+[2026-09-30 15:44:55] - ERROR - DataFrameQueryContextLogger - [UNRESOLVED_COLUMN.WITH_SUGGESTION] A column, variable, or function parameter with name `CURRENCY_CODE` cannot be resolved. Did you mean one of the following? [`RUN_DATE`, `IR_GAMMA`, `INGESTION_TS`, `NET_+50BPS`, `NET_-50BPS`]. SQLSTATE: 42703;
+'Project [trim(GTD_TAM_SEGMENT#25128, None) AS GAMMA_LLP#25141, 'upper('trim('CURRENCY_CODE)) AS GAMMA_CURRENCY#25142, cast(IR_GAMMA#25137 as double) AS IR_GAMMA#25143]
++- Project [GTD_TAM_SEGMENT#25157 AS GTD_TAM_SEGMENT#25128, DERIVATIVE_+50BPS#25158 AS DERIVATIVE_+50BPS#25129, DERIVATIVE_-50BPS#25159 AS DERIVATIVE_-50BPS#25130, LOCALBOND_+50BPS#25160 AS LOCALBOND_+50BPS#25131, LOCALBOND_-50BPS#25161 AS LOCALBOND_-50BPS#25132, LIABILITY_+50BPS#25162 AS LIABILITY_+50BPS#25133, LIABILITY_-50BPS#25163 AS LIABILITY_-50BPS#25134, NET_+50BPS#25164 AS NET_+50BPS#25135, NET_-50BPS#25165 AS NET_-50BPS#25136, IR_GAMMA#25166 AS IR_GAMMA#25137, INGESTION_TS#25167 AS INGESTION_TS#25138, REPORTING_DATE#25168 AS REPORTING_DATE#25139, RUN_DATE#25169 AS RUN_DATE#25140]
+   +- Project [GTD_TAM_SEGMENT#25157, DERIVATIVE_+50BPS#25158, DERIVATIVE_-50BPS#25159, LOCALBOND_+50BPS#25160, LOCALBOND_-50BPS#25161, LIABILITY_+50BPS#25162, LIABILITY_-50BPS#25163, NET_+50BPS#25164, NET_-50BPS#25165, IR_GAMMA#25166, INGESTION_TS#25167, REPORTING_DATE#25168, RUN_DATE#25169]
+      +- Filter ((INGESTION_TS#25167 = cast(2026-09-18 00:41:08.151901 as timestamp)) AND (REPORTING_DATE#25168 = cast(2026-03-31 as date)))
+         +- SubqueryAlias gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma
+            +- Relation gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma[GTD_TAM_SEGMENT#25157,DERIVATIVE_+50BPS#25158,DERIVATIVE_-50BPS#25159,LOCALBOND_+50BPS#25160,LOCALBOND_-50BPS#25161,LIABILITY_+50BPS#25162,LIABILITY_-50BPS#25163,NET_+50BPS#25164,NET_-50BPS#25165,IR_GAMMA#25166,INGESTION_TS#25167,REPORTING_DATE#25168,RUN_DATE#25169] parquet
+
+
+JVM stacktrace:
+org.apache.spark.sql.catalyst.ExtendedAnalysisException
+	at org.apache.spark.sql.errors.QueryCompilationErrors$.unresolvedAttributeError(QueryCompilationErrors.scala:552)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.org$apache$spark$sql$catalyst$analysis$CheckAnalysis$$failUnresolvedAttribute(CheckAnalysis.scala:179)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$10(CheckAnalysis.scala:489)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$10$adapted(CheckAnalysis.scala:474)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:342)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1(TreeNode.scala:341)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1$adapted(TreeNode.scala:341)
+	at scala.collection.mutable.ResizableArray.foreach(ResizableArray.scala:62)
+	at scala.collection.mutable.ResizableArray.foreach$(ResizableArray.scala:55)
+	at scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:49)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:341)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1(TreeNode.scala:341)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1$adapted(TreeNode.scala:341)
+	at scala.collection.mutable.ResizableArray.foreach(ResizableArray.scala:62)
+	at scala.collection.mutable.ResizableArray.foreach$(ResizableArray.scala:55)
+	at scala.collection.mutable.ArrayBuffer.foreach(ArrayBuffer.scala:49)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:341)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1(TreeNode.scala:341)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1$adapted(TreeNode.scala:341)
+	at scala.collection.Iterator.foreach(Iterator.scala:943)
+	at scala.collection.Iterator.foreach$(Iterator.scala:943)
+	at scala.collection.AbstractIterator.foreach(Iterator.scala:1431)
+	at scala.collection.IterableLike.foreach(IterableLike.scala:74)
+	at scala.collection.IterableLike.foreach$(IterableLike.scala:73)
+	at scala.collection.AbstractIterable.foreach(Iterable.scala:56)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:341)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$9(CheckAnalysis.scala:474)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$9$adapted(CheckAnalysis.scala:474)
+	at scala.collection.IndexedSeqOptimized.foreach(IndexedSeqOptimized.scala:36)
+	at scala.collection.IndexedSeqOptimized.foreach$(IndexedSeqOptimized.scala:33)
+	at scala.collection.mutable.WrappedArray.foreach(WrappedArray.scala:38)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$2(CheckAnalysis.scala:474)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$2$adapted(CheckAnalysis.scala:307)
+	at org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:342)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis0(CheckAnalysis.scala:307)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis0$(CheckAnalysis.scala:278)
+	at org.apache.spark.sql.catalyst.analysis.Analyzer.checkAnalysis0(Analyzer.scala:453)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis$1(CheckAnalysis.scala:263)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at com.databricks.spark.util.FrameProfiler$.record(FrameProfiler.scala:94)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis(CheckAnalysis.scala:250)
+	at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis$(CheckAnalysis.scala:250)
+	at org.apache.spark.sql.catalyst.analysis.Analyzer.checkAnalysis(Analyzer.scala:453)
+	at org.apache.spark.sql.catalyst.analysis.resolver.HybridAnalyzer.$anonfun$resolveInFixedPoint$1(HybridAnalyzer.scala:254)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at org.apache.spark.sql.catalyst.QueryPlanningTracker$.withTracker(QueryPlanningTracker.scala:233)
+	at org.apache.spark.sql.catalyst.analysis.resolver.HybridAnalyzer.resolveInFixedPoint(HybridAnalyzer.scala:254)
+	at org.apache.spark.sql.catalyst.analysis.resolver.HybridAnalyzer.$anonfun$apply$1(HybridAnalyzer.scala:96)
+	at org.apache.spark.sql.catalyst.analysis.resolver.HybridAnalyzer.withTrackedAnalyzerBridgeState(HybridAnalyzer.scala:131)
+	at org.apache.spark.sql.catalyst.analysis.resolver.HybridAnalyzer.apply(HybridAnalyzer.scala:87)
+	at org.apache.spark.sql.catalyst.analysis.Analyzer.$anonfun$executeAndCheck$1(Analyzer.scala:514)
+	at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.markInAnalyzer(AnalysisHelper.scala:425)
+	at org.apache.spark.sql.catalyst.analysis.Analyzer.executeAndCheck(Analyzer.scala:514)
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$lazyAnalyzed$3(QueryExecution.scala:486)
+	at com.databricks.spark.util.FrameProfiler$.record(FrameProfiler.scala:94)
+	at org.apache.spark.sql.catalyst.QueryPlanningTracker.measurePhase(QueryPlanningTracker.scala:591)
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$6(QueryExecution.scala:873)
+	at org.apache.spark.sql.execution.SQLExecution$.withExecutionPhase(SQLExecution.scala:160)
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$5(QueryExecution.scala:873)
+	at org.apache.spark.sql.execution.QueryExecution$.withInternalError(QueryExecution.scala:1512)
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$2(QueryExecution.scala:866)
+	at com.databricks.util.LexicalThreadLocal$Handle.runWith(LexicalThreadLocal.scala:63)
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$1(QueryExecution.scala:862)
+	at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:1512)
+	at org.apache.spark.sql.execution.QueryExecution.executePhase(QueryExecution.scala:862)
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$lazyAnalyzed$2(QueryExecution.scala:472)
+	at com.databricks.sql.util.MemoryTrackerHelper.withMemoryTracking(MemoryTrackerHelper.scala:80)
+	at org.apache.spark.sql.execution.QueryExecution.$anonfun$lazyAnalyzed$1(QueryExecution.scala:471)
+	at scala.util.Try$.apply(Try.scala:213)
+	at org.apache.spark.util.Utils$.doTryWithCallerStacktrace(Utils.scala:1775)
+	at org.apache.spark.util.Utils$.getTryWithCallerStacktrace(Utils.scala:1836)
+	at org.apache.spark.util.LazyTry.get(LazyTry.scala:58)
+	at org.apache.spark.sql.execution.QueryExecution.analyzed(QueryExecution.scala:526)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformDeduplicate(SparkConnectPlanner.scala:1656)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:199)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)
+	at org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformSubqueryAlias(SparkConnectPlanner.scala:402)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:213)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)
+	at org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformJoin(SparkConnectPlanner.scala:3044)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformJoinOrJoinWith(SparkConnectPlanner.scala:3023)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:197)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)
+	at org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformProject(SparkConnectPlanner.scala:1957)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:192)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)
+	at org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformFilter(SparkConnectPlanner.scala:1903)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:193)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)
+	at org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformProject(SparkConnectPlanner.scala:1957)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:192)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)
+	at org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:173)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformDeduplicate(SparkConnectPlanner.scala:1654)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.$anonfun$transformRelation$1(SparkConnectPlanner.scala:199)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$8(SessionHolder.scala:619)
+	at org.apache.spark.sql.connect.service.SessionHolder.measureSubtreeRelationNodes(SessionHolder.scala:635)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$usePlanCache$6(SessionHolder.scala:618)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.connect.service.SessionHolder.usePlanCache(SessionHolder.scala:616)
+	at org.apache.spark.sql.connect.planner.SparkConnectPlanner.transformRelation(SparkConnectPlanner.scala:186)
+	at org.apache.spark.sql.connect.execution.SparkConnectPlanExecution.handlePlan(SparkConnectPlanExecution.scala:91)
+	at org.apache.spark.sql.connect.execution.ExecuteThreadRunner.handlePlan(ExecuteThreadRunner.scala:417)
+	at org.apache.spark.sql.connect.execution.ExecuteThreadRunner.$anonfun$executeInternal$1(ExecuteThreadRunner.scala:326)
+	at org.apache.spark.sql.connect.execution.ExecuteThreadRunner.$anonfun$executeInternal$1$adapted(ExecuteThreadRunner.scala:238)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$withSession$2(SessionHolder.scala:464)
+	at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:1512)
+	at org.apache.spark.sql.connect.service.SessionHolder.$anonfun$withSession$1(SessionHolder.scala:464)
+	at org.apache.spark.JobArtifactSet$.withActiveJobArtifactState(JobArtifactSet.scala:97)
+	at org.apache.spark.sql.artifact.ArtifactManager.$anonfun$withResources$1(ArtifactManager.scala:90)
+	at org.apache.spark.util.Utils$.withContextClassLoader(Utils.scala:251)
+	at org.apache.spark.sql.artifact.ArtifactManager.withResources(ArtifactManager.scala:89)
+	at org.apache.spark.sql.connect.service.SessionHolder.withSession(SessionHolder.scala:463)
+	at org.apache.spark.sql.connect.execution.ExecuteThreadRunner.executeInternal(ExecuteThreadRunner.scala:238)
+	at org.apache.spark.sql.connect.execution.ExecuteThreadRunner.org$apache$spark$sql$connect$execution$ExecuteThreadRunner$$execute(ExecuteThreadRunner.scala:144)
+	at org.apache.spark.sql.connect.execution.ExecuteThreadRunner$ExecutionThread.$anonfun$run$2(ExecuteThreadRunner.scala:627)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at com.databricks.unity.UCSEphemeralState$Handle.runWith(UCSEphemeralState.scala:51)
+	at com.databricks.unity.HandleImpl.runWith(UCSHandle.scala:104)
+	at com.databricks.unity.HandleImpl.$anonfun$runWithAndClose$1(UCSHandle.scala:109)
+	at scala.util.Using$.resource(Using.scala:269)
+	at com.databricks.unity.HandleImpl.runWithAndClose(UCSHandle.scala:108)
+	at org.apache.spark.sql.connect.execution.ExecuteThreadRunner$ExecutionThread.run(ExecuteThreadRunner.scala:627)
+Traceback (most recent call last):
+  File "/databricks/spark/python/pyspark/sql/connect/client/core.py", line 1941, in _execute_and_fetch_as_iterator
+    for b in generator:
+  File "<frozen _collections_abc>", line 356, in __next__
+  File "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", line 150, in send
+    if not self._has_next():
+           ^^^^^^^^^^^^^^^^
+  File "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", line 219, in _has_next
+    raise e
+  File "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", line 191, in _has_next
+    self._current = self._call_iter(
+                    ^^^^^^^^^^^^^^^^
+  File "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", line 346, in _call_iter
+    raise e
+  File "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", line 301, in _call_iter
+    return iter_fun()
+           ^^^^^^^^^^
+  File "/databricks/spark/python/pyspark/sql/connect/client/reattach.py", line 192, in <lambda>
+    lambda: next(self._iterator)  # type: ignore[arg-type]
+            ^^^^^^^^^^^^^^^^^^^^
+  File "/databricks/spark/python/pyspark/sql/connect/client/core.py", line 661, in __iter__
+    for response in self._call:
+  File "/databricks/python/lib/python3.12/site-packages/grpc/_channel.py", line 540, in __next__
+    return self._next()
+           ^^^^^^^^^^^^
+  File "/databricks/python/lib/python3.12/site-packages/grpc/_channel.py", line 966, in _next
+    raise self
+grpc._channel._MultiThreadedRendezvous: <_MultiThreadedRendezvous of RPC that terminated with:
+	status = StatusCode.INTERNAL
+	details = "[UNRESOLVED_COLUMN.WITH_SUGGESTION] A column, variable, or function parameter with name `CURRENCY_CODE` cannot be resolved. Did you mean one of the following? [`RUN_DATE`, `IR_GAMMA`, `INGESTION_TS`, `NET_+50BPS`, `NET_-50BPS`]. SQLSTATE: 42703;
+'Project [trim(GTD_TAM_SEGMENT#25128, None) AS GAMMA_LLP#25141, 'upper('trim('CURRENCY_CODE)) AS GAMMA_CURRENCY#25142, cast(IR_GAMMA#25137 as double) AS IR_GAMMA#25143]
++- Project [GTD_TAM_SEGMENT#25157 AS GTD_TAM_SEGMENT#25128, DERIVATIVE_+50BPS#25158 AS DERIVATIVE_+50BPS#25129, DERIVATIVE_-50BPS#25159 AS DERIVATIVE_-50BPS#25130, LOCALBOND_+50BPS#25160 AS LOCALBOND_+50BPS#25131, LOCALBOND_-50BPS#25161 AS LOCALBOND_-50BPS#25132, LIABILITY_+50BPS#25162 AS LIABILITY_+50BPS#25133, LIABILITY_-50BPS#25163 AS LIABILITY_-50BPS#25134, NET_+50BPS#25164 AS NET_+50BPS#25135, NET_-50BPS#25165 AS NET_-50BPS#25136, IR_GAMMA#25166 AS IR_GAMMA#25137, INGESTION_TS#25167 AS INGESTION_TS#25138, REPORTING_DATE#25168 AS REPORTING_DATE#25139, RUN_DATE#25169 AS RUN_DATE#25140]
+   +- Project [GTD_TAM_SEGMENT#25157, DERIVATIVE_+50BPS#25158, DERIVATIVE_-50BPS#25159, LOCALBOND_+50BPS#25160, LOCALBOND_-50BPS#25161, LIABILITY_+50BPS#25162, LIABILITY_-50BPS#25163, NET_+50BPS#25164, NET_-50BPS#25165, IR_GAMMA#25166, INGESTION_TS#25167, REPORTING_DATE#25168, RUN_DATE#25169]
+      +- Filter ((INGESTION_TS#25167 = cast(2026-09-18 00:41:08.151901 as timestamp)) AND (REPORTING_DATE#25168 = cast(2026-03-31 as date)))
+         +- SubqueryAlias gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma
+            +- Relation gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma[GTD_TAM_SEGMENT#25157,DERIVATIVE_+50BPS#25158,DERIVATIVE_-50BPS#25159,LOCALBOND_+50BPS#25160,LOCALBOND_-50BPS#25161,LIABILITY_+50BPS#25162,LIABILITY_-50BPS#25163,NET_+50BPS#25164,NET_-50BPS#25165,IR_GAMMA#25166,INGESTION_TS#25167,REPORTING_DATE#25168,RUN_DATE#25169] parquet
+"
+	debug_error_string = "UNKNOWN:Error received from peer  {grpc_message:"[UNRESOLVED_COLUMN.WITH_SUGGESTION] A column, variable, or function parameter with name `CURRENCY_CODE` cannot be resolved. Did you mean one of the following? [`RUN_DATE`, `IR_GAMMA`, `INGESTION_TS`, `NET_+50BPS`, `NET_-50BPS`]. SQLSTATE: 42703;\n\'Project [trim(GTD_TAM_SEGMENT#25128, None) AS GAMMA_LLP#25141, \'upper(\'trim(\'CURRENCY_CODE)) AS GAMMA_CURRENCY#25142, cast(IR_GAMMA#25137 as double) AS IR_GAMMA#25143]\n+- Project [GTD_TAM_SEGMENT#25157 AS GTD_TAM_SEGMENT#25128, DERIVATIVE_+50BPS#25158 AS DERIVATIVE_+50BPS#25129, DERIVATIVE_-50BPS#25159 AS DERIVATIVE_-50BPS#25130, LOCALBOND_+50BPS#25160 AS LOCALBOND_+50BPS#25131, LOCALBOND_-50BPS#25161 AS LOCALBOND_-50BPS#25132, LIABILITY_+50BPS#25162 AS LIABILITY_+50BPS#25133, LIABILITY_-50BPS#25163 AS LIABILITY_-50BPS#25134, NET_+50BPS#25164 AS NET_+50BPS#25135, NET_-50BPS#25165 AS NET_-50BPS#25136, IR_GAMMA#25166 AS IR_GAMMA#25137, INGESTION_TS#25167 AS INGESTION_TS#25138, REPORTING_DATE#25168 AS REPORTING_DATE#25139, RUN_DATE#25169 AS RUN_DATE#25140]\n   +- Project [GTD_TAM_SEGMENT#25157, DERIVATIVE_+50BPS#25158, DERIVATIVE_-50BPS#25159, LOCALBOND_+50BPS#25160, LOCALBOND_-50BPS#25161, LIABILITY_+50BPS#25162, LIABILITY_-50BPS#25163, NET_+50BPS#25164, NET_-50BPS#25165, IR_GAMMA#25166, INGESTION_TS#25167, REPORTING_DATE#25168, RUN_DATE#25169]\n      +- Filter ((INGESTION_TS#25167 = cast(2026-09-18 00:41:08.151901 as timestamp)) AND (REPORTING_DATE#25168 = cast(2026-03-31 as date)))\n         +- SubqueryAlias gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma\n            +- Relation gfdo_dev_catalog.gft_rda_curation.irr_ear_reporting_ha_ir_gamma[GTD_TAM_SEGMENT#25157,DERIVATIVE_+50BPS#25158,DERIVATIVE_-50BPS#25159,LOCALBOND_+50BPS#25160,LOCALBOND_-50BPS#25161,LIABILITY_+50BPS#25162,LIABILITY_-50BPS#25163,NET_+50BPS#25164,NET_-50BPS#25165,IR_GAMMA#25166,INGESTION_TS#25167,REPORTING_DATE#25168,RUN_DATE#25169] parquet\n", grpc_status:13, created_time:"2026-09-30T15:44:55.112242054+00:00"}"
+>
+
+
+[UNRESOLVED_COLUMN.WITH_SUGGESTION] A column, variable, or function parameter with name `CURRENCY_CODE` cannot be resolved. Did you mean one of the following? [`RUN_DATE`, `IR_GAMMA`, `INGESTION_TS`, `NET_+50BPS`, `NET_-50BPS`]. SQLSTATE: 42703
+== DataFrame ==
+"col" was called from <command-7435772411194775>, line 197 in cell [6]
