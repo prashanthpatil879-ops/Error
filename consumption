@@ -1,0 +1,827 @@
+Daily EC Forecast portion of Dev.yaml:​‌
+
+    daily_ec_forecast:
+      config:
+        other_rate: 0
+        override_llp_to_reference_portfolio:
+          - ["BERMUDA SURPLUS", "USD Risk Free"]
+      inputs:
+        parcurve:
+          table_name: ${schema.raw}.${env_table_prefix}${ear_forecast_table_prefix}_parcurve_raw
+        reference_portfolio:
+          table_name: ${schema.raw}.${env_table_prefix}${ear_forecast_table_prefix}_referenceportfolio_raw
+        heirarchy_mapping_latest:
+          table_name: ${schema.semantic}.${env_table_prefix}irr_mapping_heirarchy_mapping_latest
+          watermark_col: "INGESTION_TS"
+        gam_sensitivities:
+          table_name: ${schema.raw}.${env_table_prefix}${ear_forecast_table_prefix}_gam_raw
+        iq_ec_forecast:
+          table_name: ${schema.raw}.${env_table_prefix}${ec_table_prefix}_iq_ec_forecast_raw
+        shock_approx:
+          table_name: ${schema.curation}.${env_table_prefix}${ec_table_prefix}_shock_approx_final
+      step_parcurve_diff:
+        table_name: ${schema.curation}.${env_table_prefix}${ec_table_prefix}_daily_parcurve_diff
+        ext_table_loc: ${adls.curation}/${env_table_prefix}${ec_table_prefix}_daily_parcurve_diff
+      step_blending:
+        table_name: ${schema.curation}.${env_table_prefix}${ec_table_prefix}_daily_blending
+        ext_table_loc: ${adls.curation}/${env_table_prefix}${ec_table_prefix}_daily_blending
+      step_model_inputs:
+        table_name: ${schema.curation}.${env_table_prefix}${ec_table_prefix}_daily_model_inputs
+        ext_table_loc: ${adls.curation}/${env_table_prefix}${ec_table_prefix}_daily_model_inputs
+      step_sensitivity_grid:
+        table_name: ${schema.curation}.${env_table_prefix}${ec_table_prefix}_daily_sensitivity_grid
+        ext_table_loc: ${adls.curation}/${env_table_prefix}${ec_table_prefix}_daily_sensitivity_grid
+      step_cubic_spline_interpolation:
+        table_name: ${schema.curation}.${env_table_prefix}${ec_table_prefix}_daily_interpolation
+        ext_table_loc: ${adls.curation}/${env_table_prefix}${ec_table_prefix}_daily_interpolation
+      step_forecast_rates:
+        table_name: ${schema.curation}.${env_table_prefix}${ec_table_prefix}_daily_rates
+        ext_table_loc: ${adls.curation}/${env_table_prefix}${ec_table_prefix}_daily_rates
+      output:
+        table_name: ${schema.curation}.${env_table_prefix}${ec_table_prefix}_daily_sensitivity_output
+        ext_table_loc: ${adls.curation}/${env_table_prefix}${ec_table_prefix}_daily_sensitivity_output
+    swap_spread_interest_rate_ec_curation:
+      inputs:
+        swap_spread:
+          table_name: ${schema.raw}.${env_table_prefix}${ec_table_prefix}_swap_spread_raw
+          watermark_col: "INGESTION_TS"
+        heirarchy_mapping_latest:
+          table_name: ${schema.semantic}.${env_table_prefix}irr_mapping_heirarchy_mapping_latest
+          watermark_col: "INGESTION_TS"
+      output:
+        table_name: ${schema.curation}.${env_table_prefix}${ec_table_prefix}_swap_spread_curation
+        ext_table_loc: ${adls.curation}/${env_table_prefix}${ec_table_prefix}_swap_spread_curation​‌
+
+DailyECForecast.py:​‌
+
+from pyspark.sql import DataFrame
+from pyspark.sql import functions as F, Window
+from pyspark.sql.types import DoubleType, DecimalType
+import pandas as pd
+from typing import NamedTuple
+from rda.engine.base_step import RDABaseStep
+import rda.utils.spark_utils as su
+from rda.utils.forecasting import cubic_spline_interpolation
+from datetime import datetime
+
+
+
+class DailyECForecastInput(NamedTuple):
+    parcurve_df: DataFrame
+    parcurve_last_quarter_end_df: DataFrame
+    reference_portfolio_df: DataFrame
+    heirarchy_mapping_latest_df: DataFrame
+    gam_sensitivity_df: DataFrame
+    shock_approx_df: DataFrame
+
+
+
+class DailyECForecast(RDABaseStep):
+
+
+    def __init__(self, env_config, spark, step_config, forecast_date):
+        super().__init__(env_config, spark, step_config, forecast_date)
+        self.key_cols = ["COUNTRY_NAME", "LOWEST_LEVEL_PORTFOLIO_NAME", "TAX_INDICATOR_NAME", "BALANCE_SHEET_COMPONENT_NAME", "IFRS_EARNINGS_COMPONENT_NAME", "CURRENCY_CODE", "PRODUCT_TYPE"]
+
+
+    def read(self):
+        inputs = self._step_config.inputs
+        last_quarter_end_date = self._date_ctx.asDict().get('PREVIOUSQUARTERENDDATE', None)
+        latest_ref_date = self._uc.read_query(f"SELECT max(Reporting_Date) as LD FROM {inputs.reference_portfolio.table_name}").first()["LD"]
+
+
+        if not self._forecast_date or str(self._forecast_date).lower() == 'yyyy-mm-dd':
+            self._forecast_date = self._uc.read_query(f"SELECT max(Reporting_Date) as LD FROM {inputs.parcurve.table_name}").first()["LD"]
+        else:
+            try:
+                validated_date = datetime.strptime(self._forecast_date, "%Y-%m-%d").date()
+                self._logger.info(f"Detected supplied forecast date: {validated_date}")
+            except ValueError:
+                msg = f"Invalid forecast date '{self._forecast_date}'. Please enter a date in YYYY-MM-DD format."
+                self._logger.error(msg)
+                raise ValueError(msg)
+
+
+        gam_part1_date = self._uc.read_query(f"SELECT max(Reporting_Date) as RD FROM {inputs.gam_sensitivities.table_name} WHERE Source_File like '%part 1%'").first()["RD"]
+        gam_part2_date = self._uc.read_query(f"SELECT max(Reporting_Date) as RD FROM {inputs.gam_sensitivities.table_name} WHERE Source_File like '%part 2%'").first()["RD"]
+
+
+        self._logger.info(f"Reading inputs for EC Daily forecast, Quarter End Date: {last_quarter_end_date}, Parcurve Date: {self._forecast_date}, Reference portfolio date: {latest_ref_date}")
+
+
+        gam_part1_df = self._uc.read_latest(inputs.gam_sensitivities.table_name, filter=f"Reporting_Date='{gam_part1_date}' and Source_File like '%part 1%'")
+        gam_part2_df = self._uc.read_latest(inputs.gam_sensitivities.table_name, filter=f"Reporting_Date='{gam_part2_date}' and Source_File like '%part 2%'")
+
+
+        input_dfs = DailyECForecastInput(
+            parcurve_df = self._uc.read_latest(inputs.parcurve.table_name, filter=f"Reporting_Date='{self._forecast_date}'"),
+            parcurve_last_quarter_end_df = self._uc.read_latest(inputs.parcurve.table_name, filter=f"Reporting_Date='{last_quarter_end_date}'"),
+            reference_portfolio_df = self._uc.read_latest(inputs.reference_portfolio.table_name, filter=f"Reporting_Date='{latest_ref_date}'"),
+            heirarchy_mapping_latest_df = self._uc.read_latest(inputs.heirarchy_mapping_latest.table_name, watermark_col=inputs.heirarchy_mapping_latest.watermark_col),
+            gam_sensitivity_df = gam_part1_df.unionByName(gam_part2_df),
+            shock_approx_df = self._uc.read_latest(inputs.shock_approx.table_name)
+        )        
+        self.validate_inputs(input_dfs)
+        return input_dfs    
+    
+    def calculate_parcurve_diff(self, inputs):
+        self._logger.info("Calculating Parcurve diff...")
+        parcurve_diff_df = (
+            inputs.parcurve_df.alias("l")
+            .join(
+                inputs.parcurve_last_quarter_end_df.alias("qe"), 
+                on=["CURRENCY_CODE", "CURVE_NAME", "TENOR"],
+                how="inner"
+            )
+            .select(
+                F.col("l.CURRENCY_CODE"),
+                F.col("l.CURVE_NAME"),
+                F.col("l.TENOR"),
+                F.round(((F.col("l.PARCURVEVALUE") - F.col("qe.PARCURVEVALUE")) * 100), 4).alias("MARKET_VALUE_DIFF")
+            )
+        )
+
+
+        parcurve_diff_df = self.cache_df(parcurve_diff_df, "parcurve_diff_df")
+
+
+        self.write(parcurve_diff_df, self._step_config.step_parcurve_diff.table_name, self._step_config.step_parcurve_diff.ext_table_loc, mode=RDABaseStep.spark_write_mode)
+        self._logger.info(f"Parcurve diff calculation completed")
+
+
+        return parcurve_diff_df
+                                               
+    def blending_market_inputs(self, inputs, parcurve_diff_df):
+        self._logger.info("Blending market inputs...")
+
+
+        llp_mapping_base_df = (
+            inputs.heirarchy_mapping_latest_df
+            .select("LOWEST_LEVEL_PORTFOLIO_NAME", "TARGET_CURRENCY_NAME", "LIABILITY_SEGMENT_NAME")
+            .filter( F.col("TARGET_CURRENCY_NAME").isNotNull() )
+            .distinct()
+        )
+
+
+        llp_mapping_base_df = (
+            llp_mapping_base_df
+            .withColumn(
+                "LIABILITY_SEGMENT_NAME",
+                F.when(
+                    (
+                        (F.col("LIABILITY_SEGMENT_NAME").isNotNull())
+                        & (~(F.lower(F.col("LIABILITY_SEGMENT_NAME")).isin("null", "nan", "")))
+                    ),
+                    F.col("LIABILITY_SEGMENT_NAME"),
+                ).otherwise(
+                    F.concat(F.col("TARGET_CURRENCY_NAME"), F.lit(" Risk Free"))
+                )
+            )
+        )
+
+
+        override_df = self._spark.createDataFrame([(k, v) for k, v in self._step_config.config.override_llp_to_reference_portfolio], ["LOWEST_LEVEL_PORTFOLIO_NAME", "OVERRIDE_LIABILITY_SEGMENT_NAME"])
+
+
+        llp_mapping_base_df = (
+            llp_mapping_base_df.alias("llp")
+            .join(
+                override_df.alias("o"),
+                on="LOWEST_LEVEL_PORTFOLIO_NAME",
+                how="left"            
+            )
+            .select(
+                F.col("llp.LOWEST_LEVEL_PORTFOLIO_NAME"),
+                F.col("llp.TARGET_CURRENCY_NAME"),
+                F.coalesce(F.col("o.OVERRIDE_LIABILITY_SEGMENT_NAME"), F.col("llp.LIABILITY_SEGMENT_NAME")).alias("LIABILITY_SEGMENT_NAME")
+            )        
+        )
+        
+        llp_with_ref_base_df = (
+            llp_mapping_base_df.alias("llp")
+            .join(
+                inputs.reference_portfolio_df.alias("ref1"),
+                on=[
+                    su.normalize_text(F.col("llp.LIABILITY_SEGMENT_NAME")) == su.normalize_text(F.col("ref1.LIABILITY_SEGMENT_NAME")),
+                    su.normalize_text(F.col("llp.TARGET_CURRENCY_NAME")) == su.normalize_text(F.col("ref1.CURRENCY_CODE"))
+                ],
+                how="left"
+            )
+            .join(
+                inputs.reference_portfolio_df.alias("ref2"),
+                on=[
+                    F.col("ref1.LIABILITY_SEGMENT_NAME").isNull(),
+                    su.normalize_text(F.concat(F.col("llp.TARGET_CURRENCY_NAME"), F.lit(" Risk Free"))) == su.normalize_text(F.col("ref2.LIABILITY_SEGMENT_NAME"))
+                ],
+                how="left"
+            )
+            .select(
+                F.col("llp.LOWEST_LEVEL_PORTFOLIO_NAME"),
+                F.coalesce(F.col("ref1.CURRENCY_CODE"), F.col("ref2.CURRENCY_CODE")).alias("CURRENCY_CODE"),
+                F.coalesce(F.col("ref1.CURVE_NAME"), F.col("ref2.CURVE_NAME")).alias("CURVE_NAME"),
+                F.coalesce(F.col("ref1.TENOR"), F.col("ref2.TENOR")).alias("TENOR"),
+                F.round(F.coalesce(F.col("ref1.REFPORTVALUE"), F.col("ref2.REFPORTVALUE")), 6).alias("REFPORTVALUE")
+            )
+            .distinct()
+        )
+
+
+        llp_with_ref_base_df = (
+            llp_with_ref_base_df
+            .withColumn("CURVE_NAME", su.normalize_text(F.col("CURVE_NAME")) )
+            .withColumn("CURRENCY_CODE", su.normalize_text(F.col("CURRENCY_CODE")) )
+            .withColumn(
+                "CURVE_NAME",
+                F.when( F.col("CURVE_NAME") == F.lit("BIG"), "BB" ).otherwise(F.col("CURVE_NAME"))
+            )
+            .filter( F.col("CURVE_NAME").isin("GOVT", "AAA", "AA", "A", "BBB", "BB") )
+        )
+
+
+        market_df = (
+            parcurve_diff_df
+            .withColumn("CURVE_NAME", su.normalize_text(F.col("CURVE_NAME")) )
+            .withColumn("CURRENCY_CODE", su.normalize_text(F.col("CURRENCY_CODE")) )
+            .filter( F.col("CURVE_NAME").isin("GOVT", "AAA", "AA", "A", "BBB", "BB") )
+        )
+
+
+        target_rating_df = self._spark.createDataFrame(
+            [("GOVT", ), ("AAA", ), ("AA", ), ("A", ), ("BBB", ), ("BB", )],
+            ["CURVE_NAME"]
+        )
+
+
+        llp_with_target_curves = (
+            llp_with_ref_base_df
+            .select("LOWEST_LEVEL_PORTFOLIO_NAME", "CURRENCY_CODE", "TENOR")
+            .distinct()
+            .crossJoin(target_rating_df)
+        )
+
+
+        llp_with_market_blending_df = (
+            llp_with_target_curves.alias("l")
+            .join(
+                market_df.alias("mkt"),
+                on=[
+                    F.col("l.CURRENCY_CODE") == F.col("mkt.CURRENCY_CODE"),
+                    F.col("l.CURVE_NAME") == F.col("mkt.CURVE_NAME"),
+                    F.col("l.TENOR") == F.col("mkt.TENOR")
+                ],
+                how="left"
+            )
+            .select("l.*", "mkt.MARKET_VALUE_DIFF")
+        )
+
+
+        blended_base_df = (
+            llp_with_market_blending_df.alias("llp")
+            .join(
+                llp_with_ref_base_df.alias("ref"),
+                on=[
+                    F.col("llp.LOWEST_LEVEL_PORTFOLIO_NAME") == F.col("ref.LOWEST_LEVEL_PORTFOLIO_NAME"),
+                    F.col("llp.CURRENCY_CODE") == F.col("ref.CURRENCY_CODE"),
+                    F.col("llp.CURVE_NAME") == F.col("ref.CURVE_NAME"),
+                    F.col("llp.TENOR") == F.col("ref.TENOR")
+                ],
+                how="left"
+            )
+            .select(
+                F.coalesce(F.col("llp.LOWEST_LEVEL_PORTFOLIO_NAME"), F.col("ref.LOWEST_LEVEL_PORTFOLIO_NAME")).alias("LOWEST_LEVEL_PORTFOLIO_NAME"),
+                F.coalesce(F.col("llp.CURRENCY_CODE"), F.col("ref.CURRENCY_CODE")).alias("CURRENCY_CODE"),
+                F.coalesce(F.col("llp.CURVE_NAME"), F.col("ref.CURVE_NAME")).alias("CURVE_NAME"),
+                F.coalesce(F.col("llp.TENOR"), F.col("ref.TENOR")).alias("TENOR"),
+                F.coalesce(F.col("llp.MARKET_VALUE_DIFF"), F.lit(0)).alias("MARKET_VALUE_DIFF"),
+                F.coalesce(F.col("ref.REFPORTVALUE"), F.lit(0)).alias("REFPORTVALUE")
+            )
+        )
+
+
+        blended_temp_df = su.pivot_measures_by_scenario(blended_base_df, "CURVE_NAME", ["MARKET_VALUE_DIFF", "REFPORTVALUE"])
+
+
+        blended_df = (
+            blended_temp_df
+            .withColumn("OTHER_RATE_CHANGE", F.lit(int(self._step_config.config.other_rate)))
+            .withColumn("RF_RATE_CHANGE", F.col("MARKET_VALUE_DIFF_GOVT"))
+            .withColumn(
+                "BLENDED_CORPORATE_SPREAD_CHANGE",
+                (   F.round(
+                        (F.col("MARKET_VALUE_DIFF_AAA") * F.col("REFPORTVALUE_AAA")) + 
+                        (F.col("MARKET_VALUE_DIFF_AA") * F.col("REFPORTVALUE_AA")) +
+                        (F.col("MARKET_VALUE_DIFF_A") * F.col("REFPORTVALUE_A")) +
+                        (F.col("MARKET_VALUE_DIFF_BBB") * F.col("REFPORTVALUE_BBB")) +
+                        (F.col("MARKET_VALUE_DIFF_BB") * F.col("REFPORTVALUE_BB"))
+                    , 4)
+                )
+            )
+            .withColumn("OTHER_RF", F.col("OTHER_RATE_CHANGE") + F.col("RF_RATE_CHANGE"))
+            .withColumn("TOTAL_RATE_CHANGE_BASE", F.col("OTHER_RF") + F.col("BLENDED_CORPORATE_SPREAD_CHANGE") )
+            .withColumn("TOTAL_RATE_CHANGE_+50BPS", F.col("TOTAL_RATE_CHANGE_BASE") + F.lit(50) )
+            .withColumn("TOTAL_RATE_CHANGE_-50BPS", F.col("TOTAL_RATE_CHANGE_BASE") - F.lit(50) )
+            .select("LOWEST_LEVEL_PORTFOLIO_NAME","CURRENCY_CODE","TENOR","OTHER_RATE_CHANGE","RF_RATE_CHANGE","BLENDED_CORPORATE_SPREAD_CHANGE","OTHER_RF","TOTAL_RATE_CHANGE_BASE","TOTAL_RATE_CHANGE_+50BPS","TOTAL_RATE_CHANGE_-50BPS")
+        )
+
+
+        blended_df = self.cache_df(blended_df, "blended_df")
+
+
+        self.write(blended_df, self._step_config.step_blending.table_name, self._step_config.step_blending.ext_table_loc, mode=RDABaseStep.spark_write_mode)
+        self._logger.info(f"Blending calculation completed")
+
+
+        return blended_df
+
+
+    def model_input_preparation(self, inputs):
+        self._logger.info("Model input preparation started...")
+        gam_base_df = (
+            inputs.gam_sensitivity_df
+            .filter( F.col("SCENARIO_NAME").isin(
+                    "Partial RF-50, all tenors up to 2yr", "Partial RF-50, all tenors up to 5yr",
+                    "Partial RF-50, all tenors up to 7yr", "Partial RF-50, all tenors up to 10yr",
+                    "Partial RF-50, all tenors up to 20yr", "Partial RF-100, all tenors up to 2yr",
+                    "Partial RF-100, all tenors up to 5yr", "Partial RF-100, all tenors up to 7yr",
+                    "Partial RF-100, all tenors up to 10yr", "Partial RF-100, all tenors up to 20yr",
+                    "Partial RF+50, all tenors up to 2yr", "Partial RF+50, all tenors up to 5yr",
+                    "Partial RF+50, all tenors up to 7yr", "Partial RF+50, all tenors up to 10yr",
+                    "Partial RF+50, all tenors up to 20yr", "Partial RF+100, all tenors up to 2yr",
+                    "Partial RF+100, all tenors up to 5yr", "Partial RF+100, all tenors up to 7yr",
+                    "Partial RF+100, all tenors up to 10yr", "Partial RF+100, all tenors up to 20yr",
+                    "RF +100bps","RF +200bps","RF +50bps","RF -100bps","RF -200bps","RF -50bps"
+                )
+            )
+            .withColumn("temp", F.concat(F.col("TAX_INDICATOR_NAME"), F.lit("_"), F.col("BALANCE_SHEET_COMPONENT_NAME"), F.lit("_"), F.col("IFRS_EARNINGS_COMPONENT_NAME")) )
+            .filter(
+                F.col("temp").isin(
+                    "Pre-Tax, Pre-MI_Net Impact_P&L",
+                    "Pre-Tax, Pre-MI_Net Impact_OCI",
+                    "Pre-Tax, Pre-MI_Net Impact_Impacts absorbed by CSM",
+                    "Pre-Tax, Pre-MI_Liabilities Detail_RA",
+                )
+            )
+            .drop("temp")
+        )
+
+
+        gam_model_input_base_df = (
+            gam_base_df
+            .withColumn(
+                "MODEL_INPUT",
+                F.when(
+                    F.col("IFRS_EARNINGS_COMPONENT_NAME") == F.lit("P&L"),
+                    "Gross BE"
+                ).otherwise(
+                    F.when(
+                        F.col("IFRS_EARNINGS_COMPONENT_NAME") == F.lit("OCI"),
+                        "Gross RA"
+                    ).otherwise(
+                        F.when(
+                            F.col("IFRS_EARNINGS_COMPONENT_NAME") == F.lit("Impacts absorbed by CSM"),
+                            "Gross Excess CoG"
+                        ).otherwise(
+                            "Modco BE"
+                        )
+                    )
+                )
+            )
+            .withColumn("FORECAST_TYPE", F.lit("Net"))
+        )
+
+
+        gam_model_input_base_df = (
+            gam_model_input_base_df.alias("gam")
+            .join(
+                inputs.heirarchy_mapping_latest_df.alias("llp"),
+                on= [
+                    su.normalize_text(F.col("gam.LOWEST_LEVEL_PORTFOLIO_NAME")) == su.normalize_text(F.col("llp.LOWEST_LEVEL_PORTFOLIO_NAME"))
+                ], 
+                how="inner"
+            )
+            .select(
+                F.col("gam.COUNTRY_NAME").alias("COUNTRY_NAME"),
+                F.col("gam.LOWEST_LEVEL_PORTFOLIO_NAME").alias("LOWEST_LEVEL_PORTFOLIO_NAME"),
+                F.col("gam.TAX_INDICATOR_NAME").alias("TAX_INDICATOR_NAME"),
+                F.col("gam.BALANCE_SHEET_COMPONENT_NAME").alias("BALANCE_SHEET_COMPONENT_NAME"),
+                F.col("gam.IFRS_EARNINGS_COMPONENT_NAME").alias("IFRS_EARNINGS_COMPONENT_NAME"),
+                F.col("gam.SCENARIO_NAME").alias("SCENARIO_NAME"),
+                F.col("llp.TARGET_CURRENCY_NAME").alias("CURRENCY_CODE"),
+                F.col("llp.PRODUCT_TYPE_NAME").alias("PRODUCT_TYPE"),
+                F.col("gam.FORECAST_TYPE").alias("FORECAST_TYPE"),
+                F.col("gam.MODEL_INPUT").alias("MODEL_INPUT"),
+                F.col("gam.AMOUNT").alias("AMOUNT")
+            )
+        )
+
+
+        gam_model_input_df = (
+            gam_model_input_base_df
+            #.filter( ~(F.col("PRODUCT_TYPE").isin('Non-par guaranteed','Non-par adjustable/guaranteed mixed','Surplus')) )
+            .distinct()
+        )
+
+
+        gam_model_input_df = self.cache_df(gam_model_input_df, "gam_model_input_df")
+
+
+        self.write(gam_model_input_df, self._step_config.step_model_inputs.table_name, self._step_config.step_model_inputs.ext_table_loc, mode=RDABaseStep.spark_write_mode)
+        self._logger.info(f"Model input preparation step completed")
+
+
+        return gam_model_input_df
+
+
+    
+    def compute_sensitivity_grid(self, inputs, gam_model_input_df):
+        self._logger.info("Sensitivity grid computation started...")
+        
+        # Step1 : Derive SENSITIVITY and MAX_TENOR from SCENARIO_NAME
+        step1_df = (
+            gam_model_input_df
+            .withColumn(
+                "SENSITIVITY",
+                F.regexp_extract("SCENARIO_NAME", r"RF\s*([+-]?\d+)", 1).cast("int")
+            )            
+            .withColumn(
+                "MAX_TENOR",
+                F.regexp_extract("SCENARIO_NAME", r"up to (\d+)yr", 1).cast("int")
+            )
+            .withColumn(
+                "SCENARIO_TYPE",                
+                F.when( F.col("SCENARIO_NAME").startswith("Partial"),
+                        F.lit("PARTIAL")
+                ).otherwise(F.lit("RF"))
+            )
+            .select(*self.key_cols, "FORECAST_TYPE", "MODEL_INPUT", "SENSITIVITY", "MAX_TENOR", "SCENARIO_TYPE", "AMOUNT")
+            .distinct()
+        )
+
+
+        # new Step : Found missing 30Y Partial shocks, derive the same using RF rates 
+        partial_lookup_df = (
+            step1_df
+            .filter(F.col("SCENARIO_TYPE") == "PARTIAL")
+            .withColumnRenamed("MAX_TENOR", "TENOR")
+            .select( *self.key_cols, "FORECAST_TYPE", "MODEL_INPUT", "SENSITIVITY", "TENOR", "AMOUNT" )
+        )
+        
+        rf_30_lookup_df = (
+            step1_df
+            .filter(
+                (F.col("SCENARIO_TYPE") == "RF") &
+                (F.col("SENSITIVITY").isin(-100, -50, 50, 100))
+            )
+            .withColumn("TENOR", F.lit(30))
+            .select( *self.key_cols, "FORECAST_TYPE", "MODEL_INPUT", "SENSITIVITY", "TENOR", "AMOUNT" )
+        )
+
+
+        lookup_df = partial_lookup_df.unionByName(rf_30_lookup_df)
+
+
+        # Step2 : Derive Cumulative sum for partial scenarios
+        w = Window.partitionBy(*self.key_cols, "FORECAST_TYPE", "MODEL_INPUT", "SENSITIVITY").orderBy("TENOR")
+        step2_df = (
+            lookup_df
+            .withColumn(
+                "PREV_CSUM",
+                F.sum("AMOUNT").over( w.rowsBetween(Window.unboundedPreceding, -1) )
+            )
+            .withColumn(
+                "VALUE",
+                F.col("AMOUNT") - F.coalesce(F.col("PREV_CSUM"), F.lit(0))
+            )
+            .select(*self.key_cols, "FORECAST_TYPE", "MODEL_INPUT", "SENSITIVITY", "TENOR", "VALUE")
+            .distinct()
+        )
+
+
+        # Step 3 : Derive Total Observable for -100 to +100
+        step3_df = (
+            step2_df
+            .groupBy(*self.key_cols, "FORECAST_TYPE", "MODEL_INPUT", "SENSITIVITY")
+            .agg( F.sum("VALUE").alias("TOTAL_OBSERVABLE") )
+        )
+
+
+        # Step 4 : Pivot totals to compute sensitivity +200 and -200
+        step4_df = (
+            step3_df
+            .groupBy(*self.key_cols, "FORECAST_TYPE", "MODEL_INPUT")
+            .pivot("SENSITIVITY", [-100, -50, 50, 100])
+            .agg(F.first("TOTAL_OBSERVABLE"))
+            .withColumnRenamed("-100", "TOTAL_OBSERVABLE_-100")
+            .withColumnRenamed("-50", "TOTAL_OBSERVABLE_-50")
+            .withColumnRenamed("50", "TOTAL_OBSERVABLE_50")
+            .withColumnRenamed("100", "TOTAL_OBSERVABLE_100")
+        )
+
+
+        # Step 5 : Calculation for +200 and -200 
+        partial_pivot = (
+            step2_df
+            .groupBy(*self.key_cols, "FORECAST_TYPE", "MODEL_INPUT", "TENOR")
+            .pivot("SENSITIVITY", [-100, -50, 50, 100])
+            .agg(F.first("VALUE"))
+            .withColumnRenamed("-100", "VALUE_-100")
+            .withColumnRenamed("-50", "VALUE_-50")
+            .withColumnRenamed("50", "VALUE_50")
+            .withColumnRenamed("100", "VALUE_100")
+        )
+
+
+        rf_df = (
+            step1_df
+            .filter( (F.col("SCENARIO_TYPE") == F.lit("RF")) & (F.col("SENSITIVITY").isin(-200, 200)) )
+            .select(*self.key_cols, "FORECAST_TYPE", "MODEL_INPUT", "SENSITIVITY", F.col("AMOUNT").alias("RF_VALUE") ) 
+            .distinct()
+        )
+        rf_df = (
+            rf_df
+            .groupBy(*self.key_cols, "FORECAST_TYPE", "MODEL_INPUT")
+            .pivot("SENSITIVITY", [-200, 200])
+            .agg( F.first("RF_VALUE") ) 
+            .withColumnRenamed("-200", "RF_VALUE_-200")
+            .withColumnRenamed("200", "RF_VALUE_200")
+        )
+
+
+        step5_df = (
+            partial_pivot.alias("p")
+            .join(step4_df.alias("t"), [*self.key_cols, "FORECAST_TYPE", "MODEL_INPUT"] )
+            .join(rf_df.alias("rf"), [*self.key_cols, "FORECAST_TYPE", "MODEL_INPUT"] )
+            .select("p.*", "t.TOTAL_OBSERVABLE_-100", "t.TOTAL_OBSERVABLE_-50", "t.TOTAL_OBSERVABLE_50", "t.TOTAL_OBSERVABLE_100", "rf.RF_VALUE_-200", "rf.RF_VALUE_200")            
+            .withColumn(
+                "VALUE_-200",
+                    (
+                        (F.col("VALUE_-100") + (F.col("VALUE_-100") - F.col("VALUE_-50")) * 2)
+                        *
+                        (
+                            F.col("RF_VALUE_-200") / 
+                            (F.col("TOTAL_OBSERVABLE_-100") + (F.col("TOTAL_OBSERVABLE_-100") - F.col("TOTAL_OBSERVABLE_-50") * 2))
+                        )
+                    )
+            )
+            .withColumn(
+                "VALUE_200",
+                    (
+                        (F.col("VALUE_100") + (F.col("VALUE_100") - F.col("VALUE_50")) * 2)
+                        *
+                        (
+                            F.col("RF_VALUE_200") / 
+                            (F.col("TOTAL_OBSERVABLE_100") + (F.col("TOTAL_OBSERVABLE_100") - F.col("TOTAL_OBSERVABLE_50") * 2))
+                        )
+                    )
+            )
+            .withColumn("VALUE_0", F.lit(0))
+        )
+
+
+        step5_df = step5_df.fillna(0)
+
+
+        sensitivity_grid_df = (
+            step5_df
+            .select(
+                *self.key_cols,
+                "FORECAST_TYPE", 
+                "MODEL_INPUT", 
+                "TENOR",
+                F.col("VALUE_-200").alias("NEG_200"),
+                F.col("VALUE_-100").alias("NEG_100"),
+                F.col("VALUE_-50").alias("NEG_50"),
+                F.col("VALUE_0").alias("BASE"),
+                F.col("VALUE_50").alias("POS_50"),
+                F.col("VALUE_100").alias("POS_100"),
+                F.col("VALUE_200").alias("POS_200")
+            )
+        )
+
+
+        sensitivity_grid_df = self.cache_df(sensitivity_grid_df, "sensitivity_grid_df")
+
+
+        self.write(sensitivity_grid_df, self._step_config.step_sensitivity_grid.table_name, self._step_config.step_sensitivity_grid.ext_table_loc, mode=RDABaseStep.spark_write_mode)
+        self._logger.info(f"Model input preparation step completed for guaranteed segments")
+
+
+        return sensitivity_grid_df
+
+
+    def step_apply_cublic_spline(self, sensitivity_grid_df, blended_df):
+        self._logger.info(f"Applying cubic spline to model input")
+
+
+        cubic_spline = F.udf(cubic_spline_interpolation, DoubleType())
+        
+        spline_base_df = (
+            sensitivity_grid_df.alias("s")
+            .join(
+                blended_df.alias("b"),
+                on = [
+                    F.col("s.LOWEST_LEVEL_PORTFOLIO_NAME") == F.col("b.LOWEST_LEVEL_PORTFOLIO_NAME"),
+                    F.col("s.CURRENCY_CODE") == F.col("b.CURRENCY_CODE"),
+                    F.col("s.TENOR") == F.col("b.TENOR")
+                ]
+            )
+            .select("s.*", "b.TOTAL_RATE_CHANGE_BASE", "b.TOTAL_RATE_CHANGE_+50BPS", "b.TOTAL_RATE_CHANGE_-50BPS")
+            .withColumn("sensitivities", F.array(F.lit(-200), F.lit(-100), F.lit(-50), F.lit(0), F.lit(50), F.lit(100), F.lit(200)))
+            .withColumn("rates", F.array("NEG_200", "NEG_100", "NEG_50", "BASE", "POS_50", "POS_100", "POS_200"))
+        )
+
+
+        spline_interpolation_df = (
+            spline_base_df
+            .withColumn("INTERP_TOTAL_RATE_CHANGE_BASE", cubic_spline(F.col("sensitivities"), F.col("rates"), F.col("TOTAL_RATE_CHANGE_BASE")))
+            .withColumn("INTERP_TOTAL_RATE_CHANGE_+50BPS", cubic_spline(F.col("sensitivities"), F.col("rates"), F.col("TOTAL_RATE_CHANGE_+50BPS")))
+            .withColumn("INTERP_TOTAL_RATE_CHANGE_-50BPS", cubic_spline(F.col("sensitivities"), F.col("rates"), F.col("TOTAL_RATE_CHANGE_-50BPS")))
+            .select(*self.key_cols, "FORECAST_TYPE", "MODEL_INPUT", "TENOR", "INTERP_TOTAL_RATE_CHANGE_BASE", "INTERP_TOTAL_RATE_CHANGE_-50BPS", "INTERP_TOTAL_RATE_CHANGE_+50BPS")
+        )
+
+
+        spline_interpolation_rollup_base_df = (
+            spline_interpolation_df
+            .withColumn(
+                "INTERP_CATEGORY", 
+                F.when( F.lower(F.col("MODEL_INPUT")).contains(" be"), "BE")
+                .when( F.lower(F.col("MODEL_INPUT")).contains(" ra" ), "RA")
+                .when( F.lower(F.col("MODEL_INPUT")).contains(" cog"), "COG")
+            )
+        )
+
+
+        spline_interpolation_rollup_df = (
+            spline_interpolation_rollup_base_df
+            .withColumn("BALANCE_SHEET_COMPONENT_NAME", F.lit("Net"))
+            .withColumn("IFRS_EARNINGS_COMPONENT_NAME", F.lit("OCI"))
+            .groupBy(*self.key_cols, "INTERP_CATEGORY", "TENOR")
+            .agg(
+                F.sum(F.col("INTERP_TOTAL_RATE_CHANGE_BASE")).alias("INTERP_TOTAL_RATE_CHANGE_BASE"),
+                F.sum(F.col("INTERP_TOTAL_RATE_CHANGE_-50BPS")).alias("INTERP_TOTAL_RATE_CHANGE_-50BPS"),
+                F.sum(F.col("INTERP_TOTAL_RATE_CHANGE_+50BPS")).alias("INTERP_TOTAL_RATE_CHANGE_+50BPS")
+            )
+        )
+
+
+        spline_interpolation_rollup_df = self.cache_df(spline_interpolation_rollup_df, "spline_interpolation_rollup_df")
+
+
+        self.write(spline_interpolation_rollup_df, self._step_config.step_cubic_spline_interpolation.table_name, self._step_config.step_cubic_spline_interpolation.ext_table_loc, mode=RDABaseStep.spark_write_mode)
+        self._logger.info(f"Cubic spline interpolation completed")
+
+
+        return spline_interpolation_rollup_df
+    
+    def step_calculate_forecast_rates(self, spline_interpolation_rollup_df):
+        self._logger.info(f"Calculating forecast rates")
+
+
+        forecast_rates_base_df = (
+            spline_interpolation_rollup_df
+            .groupBy(*self.key_cols)
+            .agg(
+                (F.sum(F.col("INTERP_TOTAL_RATE_CHANGE_-50BPS")) - F.sum(F.col("INTERP_TOTAL_RATE_CHANGE_BASE"))).alias("TOTAL_-50BPS"),
+                (F.sum(F.col("INTERP_TOTAL_RATE_CHANGE_+50BPS")) - F.sum(F.col("INTERP_TOTAL_RATE_CHANGE_BASE"))).alias("TOTAL_+50BPS")
+            )
+        )
+
+
+        forecast_rates_df = (
+            forecast_rates_base_df            
+            .select(
+                *[c for c in forecast_rates_base_df.columns if c not in ["TOTAL_+50BPS", "TOTAL_-50BPS"]],
+                F.expr("""
+                    stack(
+                        2,
+                        'RF +50bps', `TOTAL_+50BPS`,
+                        'RF -50bps', `TOTAL_-50BPS`
+                    ) as (SCENARIO, AMOUNT)
+                """)
+            )
+            .withColumn(
+                "AMOUNT",
+                F.when(
+                    F.col("AMOUNT") != 0, F.round(F.col("AMOUNT"), 15).cast(DecimalType(28,15))
+                ).otherwise(F.lit(0))
+            )
+            .select(*self.key_cols, "SCENARIO", "AMOUNT")
+        )
+
+
+        forecast_rates_df = self.cache_df(forecast_rates_df, "forecast_rates_df")
+
+
+        self.write(forecast_rates_df, self._step_config.step_forecast_rates.table_name, self._step_config.step_forecast_rates.ext_table_loc, mode=RDABaseStep.spark_write_mode)
+        self._logger.info(f"Forecast rates completed")
+
+
+        return forecast_rates_df
+    
+    def step_daily_sensitivity(self, inputs, forecast_rates_df): 
+        self._logger.info(f"Calculating daily sensitivity...")
+
+
+        shock_base_df = (
+            inputs.shock_approx_df
+            .filter( (~F.col("IS_URR")) & (F.col("SCENARIO")=="FC") )
+            .groupBy("CURRENCY")
+            .agg( F.avg("SHOCKS_BPS").alias("AVG_SHOCKS_BPS") )
+        )
+
+
+        sensitivity_base_df = (
+            forecast_rates_df
+            .filter( F.col("SCENARIO") == "RF -50bps" )
+            .alias("r")
+            .join(
+                shock_base_df.alias("s"),
+                on = F.col("r.CURRENCY_CODE") == F.col("s.CURRENCY"),
+                how = "left"
+            )
+            .withColumn("SCENARIO", F.lit("EC non-parallel interest rate scenario A"))
+            .withColumn("IR_EC_DOWN", (-1 * F.col("AMOUNT") * F.abs(F.col("AVG_SHOCKS_BPS")) / 50) ).fillna(0)
+            .select(*[f"r.{c}" for c in self.key_cols], "IR_EC_DOWN")
+        )
+
+
+        sensitivity_base_df = self.cache_df(sensitivity_base_df, "sensitivity_base_df")
+
+
+        self.write(sensitivity_base_df, self._step_config.output.table_name, self._step_config.output.ext_table_loc, mode=RDABaseStep.spark_write_mode)
+        self._logger.info(f"Daily sensitivity completed")
+
+
+        return sensitivity_base_df​‌
+
+
+And DailyECForecst Consumption:​‌
+
+%run ../../common/nb_load_rda_package​‌
+
+from rda.utils.logger import get_notebook_logger
+logger = get_notebook_logger()
+logger.info("EC engine Daily EC forecast consumption layer started")​‌
+
+from rda.io.sql_mi import SqlMI
+from rda.io.unity_catalog import UnityCatalog
+sql_mi = SqlMI(env_config, spark)
+uc = UnityCatalog(env_config, spark)​‌
+
+max_watermark = sql_mi.read_watermark('dbo.Fact_EC_Forecast', 'Load_TS')
+data_df = uc.read_incremental(env_config.get('engine.ec.daily_ec_forecast.output.table_name'), watermark_col='INGESTION_TS', watermark_value=max_watermark)​‌
+
+import pyspark.sql.functions as F
+data_df = (
+    data_df
+    .withColumn("RISK_TYPE", F.lit("Interest Rate Risk"))
+    .withColumn("SUB_RISK_TYPE", F.lit("Risk Free"))
+    .withColumn("RISK_MEASURE_TYPE", F.lit("EC"))
+    .withColumn("MEASUREMENT_FREQUENCY", F.lit("DAILY"))
+    .withColumn("SCENARIO", F.lit("EC non-parallel interest rate scenario A"))
+    .withColumn("PRE_ADJUSTED_AMOUNT", F.col("IR_EC_DOWN") )
+    .withColumn("ADJUSTMENT_AMOUNT", F.lit(0))
+    .withColumn("POST_ADJUSTED_AMOUNT", F.col("IR_EC_DOWN") )
+)​‌
+
+data_fact_df = (
+    data_df.alias("src")
+    .join(uc.read_latest_dim("dim_risk_type").alias("dim_rt"), F.col("src.risk_type") == F.col("dim_rt.risk_type_name"), "left")
+    .join(uc.read_latest_dim("dim_sub_risk_type").alias("dim_srt"), F.col("src.SUB_RISK_TYPE") == F.col("dim_srt.SUB_RISK_TYPE_NAME"), "left")
+    .join(uc.read_latest_dim("dim_risk_measure_type").alias("dim_rmt"), F.col("src.RISK_MEASURE_TYPE") == F.col("dim_rmt.RISK_MEASURE_TYPE_CODE"), "left")
+    .join(uc.read_latest_dim("dim_measurement_frequency").alias("dim_mf"), F.col("src.MEASUREMENT_FREQUENCY") == F.col("dim_mf.MEASUREMENT_FREQUENCY_CODE"), "left")
+    .join(uc.read_latest_dim("dim_date").alias("dim_dt1"), F.col("src.FORECAST_DATE") == F.col("dim_dt1.date"), "left")
+    .join(uc.read_latest_dim("dim_date").alias("dim_dt2"), F.col("src.REPORTING_DATE") == F.col("dim_dt2.date"), "left")
+    .join(uc.read_latest_dim("dim_tax_indicator").alias("dim_ti"), F.col("src.TAX_INDICATOR_NAME") == F.col("dim_ti.TAX_INDICATOR_NAME"), "left")
+    .join(uc.read_latest_dim("dim_lowest_level_portfolio").alias("dim_llp"), F.col("src.LOWEST_LEVEL_PORTFOLIO_NAME") == F.col("dim_llp.LOWEST_LEVEL_PORTFOLIO_NAME"), "left")
+    .join(uc.read_latest_dim("dim_balance_sheet_component").alias("dim_bs"), F.col("src.BALANCE_SHEET_COMPONENT_NAME") == F.col("dim_bs.BALANCE_SHEET_COMPONENT_NAME"), "left")
+    .join(uc.read_latest_dim("dim_ifrs_earnings_component").alias("dim_if"), F.col("src.IFRS_EARNINGS_COMPONENT_NAME") == F.col("dim_if.IFRS_EARNINGS_COMPONENT_NAME"), "left")
+    .join(uc.read_latest_dim("dim_scenario").alias("dim_s"), F.col("src.SCENARIO") == F.col("dim_s.SCENARIO_NAME"), "left")
+    .join(uc.read_latest_dim("dim_currency").alias("dim_cur"), F.col("src.CURRENCY_CODE") == F.col("dim_cur.CURRENCY_ALPHA_CODE"), "left")
+    .select(
+        F.coalesce(F.col("dim_rt.risk_type_key"), F.lit(0)).alias("RISK_TYPE_KEY"),
+        F.coalesce(F.col("dim_srt.Sub_Risk_Type_Key"), F.lit(0)).alias("SUB_RISK_TYPE_KEY"),
+        F.coalesce(F.col("dim_rmt.Risk_Measure_Type_Key"), F.lit(0)).alias("RISK_MEASURE_TYPE_KEY"),
+        F.coalesce(F.col("dim_mf.MEASUREMENT_FREQUENCY_KEY"), F.lit(0)).alias("MEASUREMENT_FREQUENCY_KEY"),
+        F.coalesce(F.col("dim_dt1.DATE_KEY"), F.lit(0)).alias("FORECAST_DATE_KEY"),
+        F.coalesce(F.col("dim_dt2.DATE_KEY"), F.lit(0)).alias("REPORTING_DATE_KEY"),
+        F.coalesce(F.col("dim_ti.TAX_INDICATOR_KEY"), F.lit(0)).alias("TAX_INDICATOR_KEY"),
+        F.coalesce(F.col("dim_llp.LOWEST_LEVEL_PORTFOLIO_KEY"), F.lit(0)).alias("LOWEST_LEVEL_PORTFOLIO_KEY"),
+        F.coalesce(F.col("dim_bs.BALANCE_SHEET_COMPONENT_KEY"), F.lit(0)).alias("BALANCE_SHEET_COMPONENT_KEY"),
+        F.coalesce(F.col("dim_if.IFRS_EARNINGS_COMPONENT_KEY"), F.lit(0)).alias("IFRS_EARNINGS_COMPONENT_KEY"),
+        F.coalesce(F.col("dim_s.SCENARIO_KEY"), F.lit(0)).alias("SCENARIO_KEY"),
+        F.coalesce(F.col("dim_cur.CURRENCY_KEY"), F.lit(0)).alias("CURRENCY_KEY"),
+        "src.PRE_ADJUSTED_AMOUNT",
+        "src.ADJUSTMENT_AMOUNT",
+        "src.POST_ADJUSTED_AMOUNT",
+        F.col("src.RUN_DATE").alias("RUN_DATE"),
+        F.col("src.INGESTION_TS").alias("LOAD_TS")
+    )
+)
+
+
+if data_fact_df.take(1):
+    logger.info("Writing to Fact_EC_Forecast...")
+    sql_mi.write_fact(data_fact_df, "dbo.Fact_EC_Forecast")
+else:
+    logger.info("No data to write to Fact_EC_Forecast")
